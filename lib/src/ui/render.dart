@@ -224,8 +224,9 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
   /// The distance from the top of the terminal to the top of the viewport.
   // double get _scrollOffset => _offset.pixels;
   double get _scrollOffset {
-    // return _offset.pixels ~/ _painter.cellSize.height * _painter.cellSize.height;
-    return _offset.pixels;
+    final lineHeight = _painter.cellSize.height;
+    // Snap the scroll offset to the nearest multiple of lineHeight
+    return (_offset.pixels ~/ lineHeight) * lineHeight;
   }
 
   /// The height of a terminal line in pixels. This includes the line spacing.
@@ -400,15 +401,14 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
 
   void _paint(PaintingContext context, Offset offset) {
     final canvas = context.canvas;
-
     final lines = _terminal.buffer.lines;
     final charHeight = _painter.cellSize.height;
 
     final firstLineOffset = _scrollOffset - _padding.top;
-    final lastLineOffset = _scrollOffset + size.height + _padding.bottom;
+    final lastLineOffset = _scrollOffset + size.height - _padding.bottom;
 
-    final firstLine = firstLineOffset ~/ charHeight;
-    final lastLine = lastLineOffset ~/ charHeight;
+    final firstLine = (firstLineOffset / charHeight).ceil();
+    final lastLine = (lastLineOffset / charHeight).floor() - 1;
 
     final effectFirstLine = firstLine.clamp(0, lines.length - 1);
     final effectLastLine = lastLine.clamp(0, lines.length - 1);
